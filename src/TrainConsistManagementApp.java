@@ -1,37 +1,41 @@
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
 
 public class TrainConsistManagementApp {
     public static void main(String[] args) {
-        // 1. Create a HashSet to store unique Bogie IDs
-        // HashSet ensures no two bogies have the same ID
-        Set<String> bogieIds = new HashSet<>();
+        // 1. Create a LinkedList to represent the physical train consist
+        LinkedList<String> trainConsist = new LinkedList<>();
 
-        System.out.println("--- UC3: Tracking Unique Bogie IDs (HashSet) ---");
+        System.out.println("--- UC4: Maintaining Ordered Train Consist (LinkedList) ---");
 
-        // 2. Adding unique Bogie IDs
-        bogieIds.add("BG101");
-        bogieIds.add("BG102");
-        bogieIds.add("BG103");
+        // 2. Add initial bogies (addLast is the default for add)
+        trainConsist.add("Engine");
+        trainConsist.add("Sleeper");
+        trainConsist.add("AC Coach");
+        trainConsist.add("Cargo");
+        trainConsist.add("Guard Coach");
 
-        // 3. Attempting to add a duplicate Bogie ID (BG101)
-        System.out.println("Attempting to add duplicate ID: BG101...");
-        boolean isAdded = bogieIds.add("BG101");
+        System.out.println("Initial Train Formation: " + trainConsist);
 
-        if (!isAdded) {
-            System.out.println("Alert: Bogie ID BG101 already exists! Duplicate rejected.");
+        // 3. Insert a Pantry Car at position 2 (after the Sleeper)
+        System.out.println("\nAction: Inserting 'Pantry Car' at index 2...");
+        trainConsist.add(2, "Pantry Car");
+
+        // 4. Display the train after middle insertion
+        System.out.println("Updated Formation: " + trainConsist);
+
+        // 5. Remove the first and last bogies (Simulating decoupling)
+        System.out.println("\nAction: Detaching Engine (First) and Guard Coach (Last)...");
+        trainConsist.removeFirst();
+        trainConsist.removeLast();
+
+        // 6. Display the final ordered train consist
+        System.out.println("\nFinal Consist State (After Shunting):");
+        int position = 1;
+        for (String bogie : trainConsist) {
+            System.out.println("Position " + position + ": " + bogie);
+            position++;
         }
 
-        // 4. Adding another unique ID
-        bogieIds.add("BG104");
-
-        // 5. Display the final set of Unique IDs
-        System.out.println("\nRegistered Unique Bogie IDs:");
-        for (String id : bogieIds) {
-            System.out.println("Bogie ID: " + id);
-        }
-
-        // 6. Summary
-        System.out.println("\nTotal Unique Bogies Registered: " + bogieIds.size());
+        System.out.println("\nTotal Bogies Remaining: " + trainConsist.size());
     }
 }
