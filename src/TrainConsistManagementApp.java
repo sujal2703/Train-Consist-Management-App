@@ -1,41 +1,42 @@
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class TrainConsistManagementApp {
     public static void main(String[] args) {
-        // 1. Create a LinkedList to represent the physical train consist
-        LinkedList<String> trainConsist = new LinkedList<>();
+        // 1. Create a LinkedHashSet to represent the train formation
+        // This ensures Uniqueness (Set) + Insertion Order (Linked)
+        Set<String> trainFormation = new LinkedHashSet<>();
 
-        System.out.println("--- UC4: Maintaining Ordered Train Consist (LinkedList) ---");
+        System.out.println("--- UC5: Preserving Insertion Order with Uniqueness ---");
 
-        // 2. Add initial bogies (addLast is the default for add)
-        trainConsist.add("Engine");
-        trainConsist.add("Sleeper");
-        trainConsist.add("AC Coach");
-        trainConsist.add("Cargo");
-        trainConsist.add("Guard Coach");
+        // 2. Attach bogies in a specific sequence
+        trainFormation.add("Engine");
+        trainFormation.add("Sleeper");
+        trainFormation.add("Cargo");
+        trainFormation.add("Guard");
 
-        System.out.println("Initial Train Formation: " + trainConsist);
+        System.out.println("Initial Formation: " + trainFormation);
 
-        // 3. Insert a Pantry Car at position 2 (after the Sleeper)
-        System.out.println("\nAction: Inserting 'Pantry Car' at index 2...");
-        trainConsist.add(2, "Pantry Car");
+        // 3. Attempt to attach a duplicate bogie (Sleeper)
+        System.out.println("\nAction: Attempting to attach another 'Sleeper' bogie...");
+        boolean isAdded = trainFormation.add("Sleeper");
 
-        // 4. Display the train after middle insertion
-        System.out.println("Updated Formation: " + trainConsist);
-
-        // 5. Remove the first and last bogies (Simulating decoupling)
-        System.out.println("\nAction: Detaching Engine (First) and Guard Coach (Last)...");
-        trainConsist.removeFirst();
-        trainConsist.removeLast();
-
-        // 6. Display the final ordered train consist
-        System.out.println("\nFinal Consist State (After Shunting):");
-        int position = 1;
-        for (String bogie : trainConsist) {
-            System.out.println("Position " + position + ": " + bogie);
-            position++;
+        if (!isAdded) {
+            System.out.println("Result: Duplicate 'Sleeper' rejected! (Business rule enforced)");
         }
 
-        System.out.println("\nTotal Bogies Remaining: " + trainConsist.size());
+        // 4. Attach a new unique bogie
+        trainFormation.add("AC Coach");
+
+        // 5. Display the final formation
+        // Notice how the order is preserved exactly as they were added
+        System.out.println("\n--- Final Train Composition ---");
+        int sequence = 1;
+        for (String bogie : trainFormation) {
+            System.out.println("Position " + sequence + ": " + bogie);
+            sequence++;
+        }
+
+        System.out.println("\nTotal unique bogies in formation: " + trainFormation.size());
     }
 }
