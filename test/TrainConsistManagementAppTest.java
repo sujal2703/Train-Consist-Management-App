@@ -4,52 +4,49 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TrainConsistManagementAppTest {
 
     @Test
-    void testBinarySearch_BogieFound() {
-        String[] bogies = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        boolean result = TrainConsistManagementApp.binarySearchBogieId(bogies, "BG309");
-        assertTrue(result, "Search should return true when the bogie ID exists.");
-    }
-
-    @Test
-    void testBinarySearch_BogieNotFound() {
-        String[] bogies = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        boolean result = TrainConsistManagementApp.binarySearchBogieId(bogies, "BG999");
-        assertFalse(result, "Search should return false when the bogie ID does not exist.");
-    }
-
-    @Test
-    void testBinarySearch_FirstElementMatch() {
-        String[] bogies = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        boolean result = TrainConsistManagementApp.binarySearchBogieId(bogies, "BG101");
-        assertTrue(result, "Search should successfully narrow down to the first element.");
-    }
-
-    @Test
-    void testBinarySearch_LastElementMatch() {
-        String[] bogies = {"BG101", "BG205", "BG309", "BG412", "BG550"};
-        boolean result = TrainConsistManagementApp.binarySearchBogieId(bogies, "BG550");
-        assertTrue(result, "Search should successfully narrow down to the last element.");
-    }
-
-    @Test
-    void testBinarySearch_SingleElementArray() {
-        String[] bogies = {"BG101"};
-        boolean result = TrainConsistManagementApp.binarySearchBogieId(bogies, "BG101");
-        assertTrue(result, "Search should work properly for arrays with exactly one element.");
-    }
-
-    @Test
-    void testBinarySearch_EmptyArray() {
+    void testSearch_ThrowsExceptionWhenEmpty() {
         String[] emptyBogies = {};
-        boolean result = TrainConsistManagementApp.binarySearchBogieId(emptyBogies, "BG101");
-        assertFalse(result, "Search should safely handle empty arrays and return false.");
+
+        // Assert that calling search on an empty array throws an IllegalStateException
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            TrainConsistManagementApp.searchBogieId(emptyBogies, "BG101");
+        }, "Searching an empty array should throw an IllegalStateException.");
+
+        // Optional: Verify the error message is descriptive
+        assertEquals("Cannot perform search: The train consist is empty.", exception.getMessage());
     }
 
     @Test
-    void testBinarySearch_UnsortedInputHandled() {
-        // Input is out of order. If the method didn't sort it first, binary search would fail.
-        String[] unsortedBogies = {"BG309", "BG101", "BG550", "BG205", "BG412"};
-        boolean result = TrainConsistManagementApp.binarySearchBogieId(unsortedBogies, "BG205");
-        assertTrue(result, "Method should sort the array internally before executing binary search.");
+    void testSearch_AllowsSearchWhenDataExists() {
+        String[] bogies = {"BG101", "BG205"};
+
+        // Assert that the program does NOT throw an exception when data is present
+        assertDoesNotThrow(() -> {
+            TrainConsistManagementApp.searchBogieId(bogies, "BG101");
+        }, "Valid array should process without throwing state exceptions.");
+    }
+
+    @Test
+    void testSearch_BogieFoundAfterValidation() {
+        String[] bogies = {"BG101", "BG205", "BG309"};
+        boolean result = TrainConsistManagementApp.searchBogieId(bogies, "BG205");
+
+        assertTrue(result, "Search should return true when the target bogie exists in a valid array.");
+    }
+
+    @Test
+    void testSearch_BogieNotFoundAfterValidation() {
+        String[] bogies = {"BG101", "BG205", "BG309"};
+        boolean result = TrainConsistManagementApp.searchBogieId(bogies, "BG999");
+
+        assertFalse(result, "Search should return false when the target bogie is missing from a valid array.");
+    }
+
+    @Test
+    void testSearch_SingleElementValidCase() {
+        String[] bogies = {"BG101"};
+        boolean result = TrainConsistManagementApp.searchBogieId(bogies, "BG101");
+
+        assertTrue(result, "Search should return true for a valid single-element array match.");
     }
 }
