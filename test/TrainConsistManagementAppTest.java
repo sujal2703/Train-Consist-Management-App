@@ -1,4 +1,8 @@
+feature/UC15
+import org.junit.jupiter.api.BeforeEach;
+
  feature/UC14
+ main
 import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +13,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TrainConsistManagementAppTest {
 
+ feature/UC15
+    private GoodsBogie cylindricalBogie;
+    private GoodsBogie rectangularBogie;
+
+    @BeforeEach
+    void setUp() {
+        cylindricalBogie = new GoodsBogie("Cylindrical");
+        rectangularBogie = new GoodsBogie("Rectangular");
+
  feature/UC14
     @Test
     void testException_ValidCapacityCreation() {
@@ -17,55 +30,58 @@ public class TrainConsistManagementAppTest {
             Bogie validBogie = new Bogie("Sleeper", 72);
             assertNotNull(validBogie);
         }, "Valid bogie creation should not throw an exception");
+main
     }
 
     @Test
-    void testException_NegativeCapacityThrowsException() {
-        // Assert that creating a bogie with -10 capacity throws the exception
-        assertThrows(InvalidCapacityException.class, () -> {
-            new Bogie("First Class", -10);
-        }, "Negative capacity should throw InvalidCapacityException");
-    }
-
-    @Test
-    void testException_ZeroCapacityThrowsException() {
-        // Assert that creating a bogie with 0 capacity throws the exception
-        assertThrows(InvalidCapacityException.class, () -> {
-            new Bogie("AC Chair", 0);
-        }, "Zero capacity should throw InvalidCapacityException");
-    }
-
-    @Test
-    void testException_ExceptionMessageValidation() {
-        // Capture the exception to check its message
-        InvalidCapacityException exception = assertThrows(InvalidCapacityException.class, () -> {
-            new Bogie("General", -5);
-        });
-
-        // Validate the specific message
-        assertEquals("Capacity must be greater than zero", exception.getMessage());
-    }
-
-    @Test
-    void testException_ObjectIntegrityAfterCreation() throws InvalidCapacityException {
-        // Create a valid bogie and ensure its values are mapped correctly
-        Bogie bogie = new Bogie("Sleeper", 72);
-
-        assertEquals("Sleeper", bogie.getName());
-        assertEquals(72, bogie.getCapacity());
-    }
-
-    @Test
-    void testException_MultipleValidBogiesCreation() {
-        // Assert that multiple valid bogies can be instantiated sequentially
+    void testCargo_SafeAssignment() {
+        // Assert no exception is thrown for safe assignments
         assertDoesNotThrow(() -> {
-            Bogie b1 = new Bogie("Sleeper", 72);
-            Bogie b2 = new Bogie("AC Chair", 56);
-            Bogie b3 = new Bogie("First Class", 24);
+            cylindricalBogie.assignCargo("Petroleum");
+        });
+        assertEquals("Petroleum", cylindricalBogie.getCargo(), "Cargo should be securely assigned.");
+    }
 
-            assertNotNull(b1);
-            assertNotNull(b2);
-            assertNotNull(b3);
+    @Test
+    void testCargo_UnsafeAssignmentHandled() {
+        // Assert the specific runtime exception is thrown for unsafe logic
+        assertThrows(CargoSafetyException.class, () -> {
+            rectangularBogie.assignCargo("Petroleum");
+        }, "Assigning Petroleum to a Rectangular bogie should throw CargoSafetyException");
+    }
+
+    @Test
+    void testCargo_CargoNotAssignedAfterFailure() {
+        // Ensure state remains unchanged if an exception is thrown
+        try {
+            rectangularBogie.assignCargo("Petroleum");
+        } catch (CargoSafetyException e) {
+            // Expected
+        }
+        assertEquals("Empty", rectangularBogie.getCargo(), "Cargo should remain Empty after a failed assignment.");
+    }
+
+    @Test
+    void testCargo_ProgramContinuesAfterException() {
+        // Verify our handler method safely catches the exception and returns false instead of crashing
+        boolean success = TrainConsistManagementApp.safelyAssignCargo(rectangularBogie, "Petroleum");
+        assertFalse(success, "Handler should return false on unsafe assignment.");
+
+        // App should still be able to process the next request
+        boolean nextSuccess = TrainConsistManagementApp.safelyAssignCargo(cylindricalBogie, "Petroleum");
+        assertTrue(nextSuccess, "Handler should successfully process subsequent safe assignments.");
+    }
+
+    @Test
+    void testCargo_FinallyBlockExecution() {
+        /*
+         * Note: While difficult to test console output directly without stream redirection,
+         * we can verify the behavior of our handling wrapper. Because it returns a boolean
+         * AFTER the finally block has executed without interrupting the JVM,
+         * it proves the finally block executed safely and yielded control back to the caller.
+         */
+        assertDoesNotThrow(() -> {
+            TrainConsistManagementApp.safelyAssignCargo(rectangularBogie, "Petroleum");
         });
 
     private List<Bogie> testBogies;
