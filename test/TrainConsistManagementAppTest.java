@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -5,54 +6,71 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TrainConsistManagementAppTest {
 
-    @Test
-    void testSafety_AllBogiesValid() {
-        List<GoodsBogie> train = new ArrayList<>();
-        train.add(new GoodsBogie("Cylindrical", "Petroleum"));
-        train.add(new GoodsBogie("Cylindrical", "Petroleum"));
+    private List<Bogie> smallDataset;
 
-        assertTrue(TrainConsistManagementApp.isSafetyCompliant(train),
-                "Train should be safe when all cylindrical bogies carry petroleum");
+    @BeforeEach
+    void setUp() {
+        smallDataset = new ArrayList<>();
+        smallDataset.add(new Bogie("Sleeper", 72));
+        smallDataset.add(new Bogie("AC Chair", 56));
+        smallDataset.add(new Bogie("First Class", 24));
+        smallDataset.add(new Bogie("General", 90));
     }
 
     @Test
-    void testSafety_CylindricalWithInvalidCargo() {
-        List<GoodsBogie> train = new ArrayList<>();
-        train.add(new GoodsBogie("Cylindrical", "Coal"));
+    void testLoopFilteringLogic() {
+        List<Bogie> result = TrainConsistManagementApp.filterUsingLoop(smallDataset, 60);
 
-        assertFalse(TrainConsistManagementApp.isSafetyCompliant(train),
-                "Train should be unsafe if a cylindrical bogie carries coal");
+        assertEquals(2, result.size(), "Should only find Sleeper and General");
+        assertTrue(result.stream().allMatch(b -> b.getCapacity() > 60),
+                "All items in result should have capacity > 60");
     }
 
     @Test
-    void testSafety_NonCylindricalBogiesAllowed() {
-        List<GoodsBogie> train = new ArrayList<>();
-        train.add(new GoodsBogie("Box", "Coal"));
-        train.add(new GoodsBogie("Open", "Grain"));
-        train.add(new GoodsBogie("Rectangular", "Steel"));
+    void testStreamFilteringLogic() {
+        List<Bogie> result = TrainConsistManagementApp.filterUsingStream(smallDataset, 60);
 
-        assertTrue(TrainConsistManagementApp.isSafetyCompliant(train),
-                "Train should be safe if non-cylindrical bogies carry various goods");
+        assertEquals(2, result.size(), "Should only find Sleeper and General");
+        assertTrue(result.stream().allMatch(b -> b.getCapacity() > 60),
+                "All items in result should have capacity > 60");
     }
 
     @Test
-    void testSafety_MixedBogiesWithViolation() {
-        List<GoodsBogie> train = new ArrayList<>();
-        train.add(new GoodsBogie("Rectangular", "Coal"));
-        train.add(new GoodsBogie("Open", "Grain"));
-        train.add(new GoodsBogie("Cylindrical", "Petroleum"));
-        train.add(new GoodsBogie("Cylindrical", "Chemicals")); // Violation here
+    void testLoopAndStreamResultsMatch() {
+        List<Bogie> loopResult = TrainConsistManagementApp.filterUsingLoop(smallDataset, 60);
+        List<Bogie> streamResult = TrainConsistManagementApp.filterUsingStream(smallDataset, 60);
 
-        assertFalse(TrainConsistManagementApp.isSafetyCompliant(train),
-                "Train should be unsafe if even one bogie violates the safety rule");
+        assertEquals(loopResult.size(), streamResult.size(),
+                "Both methods should return the exact same number of bogies");
     }
 
     @Test
-    void testSafety_EmptyBogieList() {
-        List<GoodsBogie> emptyTrain = new ArrayList<>();
+    void testExecutionTimeMeasurement() {
+        // Measure Loop
+        long loopStart = System.nanoTime();
+        TrainConsistManagementApp.filterUsingLoop(smallDataset, 60);
+        long loopEnd = System.nanoTime();
+        long loopElapsed = loopEnd - loopStart;
 
-        // In Stream API, allMatch() on an empty stream returns true (vacuous truth)
-        assertTrue(TrainConsistManagementApp.isSafetyCompliant(emptyTrain),
-                "Empty train has no violations, so it should be considered compliant");
+        // Measure Stream
+        long streamStart = System.nanoTime();
+        TrainConsistManagementApp.filterUsingStream(smallDataset, 60);
+        long streamEnd = System.nanoTime();
+        long streamElapsed = streamEnd - streamStart;
+
+        assertTrue(loopElapsed > 0, "Loop elapsed time should be greater than 0 nanoseconds");
+        assertTrue(streamElapsed > 0, "Stream elapsed time should be greater than 0 nanoseconds");
+    }
+
+    @Test
+    void testLargeDatasetProcessing() {
+        // Generate 50,000 items
+        List<Bogie> largeList = TrainConsistManagementApp.generateLargeBogieList(50000);
+
+        // Ensure filtering completes successfully and returns the expected subset
+        List<Bogie> result = TrainConsistManagementApp.filterUsingStream(largeList, 60);
+
+        // Since our generate method alternates 72 and 56, exactly half should be > 60
+        assertEquals(25000, result.size());
     }
 }

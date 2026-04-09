@@ -1,79 +1,95 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-// 1. Create a GoodsBogie class with type and cargo fields
-class GoodsBogie {
-    private String type;  // e.g., Cylindrical, Rectangular, Open
-    private String cargo; // e.g., Petroleum, Coal, Grain
+// 1. Reusing the Bogie class
+class Bogie {
+    private String name;
+    private int capacity;
 
-    public GoodsBogie(String type, String cargo) {
-        this.type = type;
-        this.cargo = cargo;
+    public Bogie(String name, int capacity) {
+        this.name = name;
+        this.capacity = capacity;
     }
 
-    public String getType() {
-        return type;
+    public String getName() {
+        return name;
     }
 
-    public String getCargo() {
-        return cargo;
+    public int getCapacity() {
+        return capacity;
     }
 
     @Override
     public String toString() {
-        return String.format("%-15s : Carrying %s", type, cargo);
+        return String.format("%-15s : %d seats", name, capacity);
     }
 }
 
 public class TrainConsistManagementApp {
 
-    /**
-     * Checks if the list of goods bogies complies with safety rules.
-     * Rule: Cylindrical bogies must ONLY carry Petroleum.
-     */
-    public static boolean isSafetyCompliant(List<GoodsBogie> goodsBogies) {
-        // 2. Convert collection to stream
-        return goodsBogies.stream()
-                // 3 & 4. Use allMatch() with conditional logic
-                .allMatch(bogie -> {
-                    if ("Cylindrical".equalsIgnoreCase(bogie.getType())) {
-                        return "Petroleum".equalsIgnoreCase(bogie.getCargo());
-                    }
-                    // Non-cylindrical bogies are inherently safe in this specific rule check
-                    return true;
-                });
+    // --- LOOP-BASED FILTERING ---
+    public static List<Bogie> filterUsingLoop(List<Bogie> bogies, int threshold) {
+        List<Bogie> filteredList = new ArrayList<>();
+        for (Bogie b : bogies) {
+            if (b.getCapacity() > threshold) {
+                filteredList.add(b);
+            }
+        }
+        return filteredList;
+    }
+
+    // --- STREAM-BASED FILTERING ---
+    public static List<Bogie> filterUsingStream(List<Bogie> bogies, int threshold) {
+        return bogies.stream()
+                .filter(b -> b.getCapacity() > threshold)
+                .collect(Collectors.toList());
+    }
+
+    // Helper method to generate a massive list for realistic benchmarking
+    public static List<Bogie> generateLargeBogieList(int size) {
+        List<Bogie> largeList = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            // Alternate capacities for variety
+            int capacity = (i % 2 == 0) ? 72 : 56;
+            largeList.add(new Bogie("Bogie-" + i, capacity));
+        }
+        return largeList;
     }
 
     public static void main(String[] args) {
         System.out.println("--- Train Consist Management System ---");
-        System.out.println("Executing UC12: Safety Compliance Check\n");
+        System.out.println("Executing UC13: Loops vs Streams Benchmark\n");
 
-        // --- Scenario 1: A Safe Train ---
-        List<GoodsBogie> safeTrain = new ArrayList<>();
-        safeTrain.add(new GoodsBogie("Cylindrical", "Petroleum"));
-        safeTrain.add(new GoodsBogie("Rectangular", "Coal"));
-        safeTrain.add(new GoodsBogie("Open", "Grain"));
+        // 1. Create a large collection of bogies for testing
+        int datasetSize = 1_000_000;
+        System.out.println("Generating dataset of " + datasetSize + " bogies...");
+        List<Bogie> massiveTrain = generateLargeBogieList(datasetSize);
+        int threshold = 60;
 
-        System.out.println("Train 1 Formation:");
-        safeTrain.forEach(System.out::println);
+        // Warm-up the JVM (Java optimizes code on the fly. Running it once before measuring gives fairer results)
+        filterUsingLoop(massiveTrain, threshold);
+        filterUsingStream(massiveTrain, threshold);
 
-        // 5 & 6. Store in boolean and display
-        boolean isTrain1Safe = isSafetyCompliant(safeTrain);
-        System.out.println("Safety Status: " + (isTrain1Safe ? "✅ COMPLIANT" : "❌ UNSAFE - Rule Violation"));
+        System.out.println("\n--- Starting Benchmark (Threshold > " + threshold + ") ---");
 
-        System.out.println("\n------------------------------------------------\n");
+        // --- 2. MEASURE LOOP PERFORMANCE ---
+        long loopStartTime = System.nanoTime();
+        List<Bogie> loopResults = filterUsingLoop(massiveTrain, threshold);
+        long loopEndTime = System.nanoTime();
+        long loopDuration = loopEndTime - loopStartTime;
 
-        // --- Scenario 2: An Unsafe Train ---
-        List<GoodsBogie> unsafeTrain = new ArrayList<>();
-        unsafeTrain.add(new GoodsBogie("Cylindrical", "Petroleum"));
-        unsafeTrain.add(new GoodsBogie("Cylindrical", "Coal")); // VIOLATION!
-        unsafeTrain.add(new GoodsBogie("Rectangular", "Steel"));
+        System.out.println("Loop-based execution time   : " + loopDuration + " nanoseconds (" + (loopDuration / 1_000_000) + " ms)");
 
-        System.out.println("Train 2 Formation:");
-        unsafeTrain.forEach(System.out::println);
+        // --- 3. MEASURE STREAM PERFORMANCE ---
+        long streamStartTime = System.nanoTime();
+        List<Bogie> streamResults = filterUsingStream(massiveTrain, threshold);
+        long streamEndTime = System.nanoTime();
+        long streamDuration = streamEndTime - streamStartTime;
 
-        // 5 & 6. Store in boolean and display
-        boolean isTrain2Safe = isSafetyCompliant(unsafeTrain);
-        System.out.println("Safety Status: " + (isTrain2Safe ? "✅ COMPLIANT" : "❌ UNSAFE - Rule Violation"));
+        System.out.println("Stream-based execution time : " + streamDuration + " nanoseconds (" + (streamDuration / 1_000_000) + " ms)");
+
+        // Verification
+        System.out.println("\nVerification: Both methods found " + loopResults.size() + " matching bogies.");
     }
 }
