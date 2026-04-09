@@ -3,58 +3,34 @@ import java.util.Arrays;
 public class TrainConsistManagementApp {
 
     /**
-     * UC16: Sorts an array of bogie capacities using the Bubble Sort algorithm.
-     * Time Complexity: O(n²) in the worst case.
+     * UC17: Sorts an array of bogie names alphabetically using Java's built-in optimized sort.
+     * Time Complexity: O(n log n)
      */
-    public static void bubbleSortCapacities(int[] capacities) {
-        // Safety check for null or empty/single-element arrays
-        if (capacities == null || capacities.length <= 1) {
-            return;
-        }
-
-        int n = capacities.length;
-        boolean swapped;
-
-        // Outer loop for multiple passes
-        for (int i = 0; i < n - 1; i++) {
-            swapped = false;
-
-            // Inner loop for adjacent comparisons
-            for (int j = 0; j < n - i - 1; j++) {
-
-                // If the left element is greater than the right element, swap them
-                if (capacities[j] > capacities[j + 1]) {
-                    int temp = capacities[j];
-                    capacities[j] = capacities[j + 1];
-                    capacities[j + 1] = temp;
-
-                    swapped = true; // Mark that a swap occurred
-                }
-            }
-
-            // Optimization: If no elements were swapped in the inner loop,
-            // the array is already sorted, and we can break early.
-            if (!swapped) {
-                break;
-            }
+    public static void sortBogieNames(String[] bogieNames) {
+        // Safety check to prevent NullPointerException
+        if (bogieNames != null) {
+            Arrays.sort(bogieNames);
         }
     }
 
     public static void main(String[] args) {
         System.out.println("=========================================");
         System.out.println("   TRAIN CONSIST MANAGEMENT SYSTEM");
-        System.out.println("   UC16: Manual Bubble Sort");
+        System.out.println("   UC17: Arrays.sort() Implementation");
         System.out.println("=========================================\n");
 
-        int[] passengerCapacities = {72, 56, 24, 70, 60};
+        // 1. Create an array of bogie type names
+        String[] passengerBogies = {"Sleeper", "AC Chair", "First Class", "General", "Luxury"};
 
         System.out.println("--- Before Sorting ---");
-        System.out.println(Arrays.toString(passengerCapacities));
+        // Print the unsorted array using Arrays.toString()
+        System.out.println(Arrays.toString(passengerBogies));
 
-        // Execute the manual sort
-        bubbleSortCapacities(passengerCapacities);
+        // 2. Execute standard library sort
+        sortBogieNames(passengerBogies);
 
-        System.out.println("\n--- After Bubble Sort ---");
-        System.out.println(Arrays.toString(passengerCapacities));
+        System.out.println("\n--- After Arrays.sort() ---");
+        // Print the sorted array using Arrays.toString()
+        System.out.println(Arrays.toString(passengerBogies));
     }
 }
