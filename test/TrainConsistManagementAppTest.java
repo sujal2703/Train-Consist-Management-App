@@ -1,76 +1,64 @@
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.util.ArrayList;
-import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TrainConsistManagementAppTest {
 
-    private List<Bogie> smallDataset;
-
-    @BeforeEach
-    void setUp() {
-        smallDataset = new ArrayList<>();
-        smallDataset.add(new Bogie("Sleeper", 72));
-        smallDataset.add(new Bogie("AC Chair", 56));
-        smallDataset.add(new Bogie("First Class", 24));
-        smallDataset.add(new Bogie("General", 90));
+    @Test
+    void testException_ValidCapacityCreation() {
+        // Assert that no exception is thrown when creating a valid bogie
+        assertDoesNotThrow(() -> {
+            Bogie validBogie = new Bogie("Sleeper", 72);
+            assertNotNull(validBogie);
+        }, "Valid bogie creation should not throw an exception");
     }
 
     @Test
-    void testLoopFilteringLogic() {
-        List<Bogie> result = TrainConsistManagementApp.filterUsingLoop(smallDataset, 60);
-
-        assertEquals(2, result.size(), "Should only find Sleeper and General");
-        assertTrue(result.stream().allMatch(b -> b.getCapacity() > 60),
-                "All items in result should have capacity > 60");
+    void testException_NegativeCapacityThrowsException() {
+        // Assert that creating a bogie with -10 capacity throws the exception
+        assertThrows(InvalidCapacityException.class, () -> {
+            new Bogie("First Class", -10);
+        }, "Negative capacity should throw InvalidCapacityException");
     }
 
     @Test
-    void testStreamFilteringLogic() {
-        List<Bogie> result = TrainConsistManagementApp.filterUsingStream(smallDataset, 60);
-
-        assertEquals(2, result.size(), "Should only find Sleeper and General");
-        assertTrue(result.stream().allMatch(b -> b.getCapacity() > 60),
-                "All items in result should have capacity > 60");
+    void testException_ZeroCapacityThrowsException() {
+        // Assert that creating a bogie with 0 capacity throws the exception
+        assertThrows(InvalidCapacityException.class, () -> {
+            new Bogie("AC Chair", 0);
+        }, "Zero capacity should throw InvalidCapacityException");
     }
 
     @Test
-    void testLoopAndStreamResultsMatch() {
-        List<Bogie> loopResult = TrainConsistManagementApp.filterUsingLoop(smallDataset, 60);
-        List<Bogie> streamResult = TrainConsistManagementApp.filterUsingStream(smallDataset, 60);
+    void testException_ExceptionMessageValidation() {
+        // Capture the exception to check its message
+        InvalidCapacityException exception = assertThrows(InvalidCapacityException.class, () -> {
+            new Bogie("General", -5);
+        });
 
-        assertEquals(loopResult.size(), streamResult.size(),
-                "Both methods should return the exact same number of bogies");
+        // Validate the specific message
+        assertEquals("Capacity must be greater than zero", exception.getMessage());
     }
 
     @Test
-    void testExecutionTimeMeasurement() {
-        // Measure Loop
-        long loopStart = System.nanoTime();
-        TrainConsistManagementApp.filterUsingLoop(smallDataset, 60);
-        long loopEnd = System.nanoTime();
-        long loopElapsed = loopEnd - loopStart;
+    void testException_ObjectIntegrityAfterCreation() throws InvalidCapacityException {
+        // Create a valid bogie and ensure its values are mapped correctly
+        Bogie bogie = new Bogie("Sleeper", 72);
 
-        // Measure Stream
-        long streamStart = System.nanoTime();
-        TrainConsistManagementApp.filterUsingStream(smallDataset, 60);
-        long streamEnd = System.nanoTime();
-        long streamElapsed = streamEnd - streamStart;
-
-        assertTrue(loopElapsed > 0, "Loop elapsed time should be greater than 0 nanoseconds");
-        assertTrue(streamElapsed > 0, "Stream elapsed time should be greater than 0 nanoseconds");
+        assertEquals("Sleeper", bogie.getName());
+        assertEquals(72, bogie.getCapacity());
     }
 
     @Test
-    void testLargeDatasetProcessing() {
-        // Generate 50,000 items
-        List<Bogie> largeList = TrainConsistManagementApp.generateLargeBogieList(50000);
+    void testException_MultipleValidBogiesCreation() {
+        // Assert that multiple valid bogies can be instantiated sequentially
+        assertDoesNotThrow(() -> {
+            Bogie b1 = new Bogie("Sleeper", 72);
+            Bogie b2 = new Bogie("AC Chair", 56);
+            Bogie b3 = new Bogie("First Class", 24);
 
-        // Ensure filtering completes successfully and returns the expected subset
-        List<Bogie> result = TrainConsistManagementApp.filterUsingStream(largeList, 60);
-
-        // Since our generate method alternates 72 and 56, exactly half should be > 60
-        assertEquals(25000, result.size());
+            assertNotNull(b1);
+            assertNotNull(b2);
+            assertNotNull(b3);
+        });
     }
 }

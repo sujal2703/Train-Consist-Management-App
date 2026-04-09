@@ -1,13 +1,26 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-// 1. Reusing the Bogie class
+// 1. Create the Custom Exception Class
+// By extending Exception, this becomes a "Checked Exception"
+class InvalidCapacityException extends Exception {
+    public InvalidCapacityException(String message) {
+        super(message);
+    }
+}
+
+// 2. Update the Bogie Class to use the Custom Exception
 class Bogie {
     private String name;
     private int capacity;
 
-    public Bogie(String name, int capacity) {
+    // Declare that this constructor might throw an InvalidCapacityException
+    public Bogie(String name, int capacity) throws InvalidCapacityException {
+        // 3. Fail-Fast Validation
+        if (capacity <= 0) {
+            throw new InvalidCapacityException("Capacity must be greater than zero");
+        }
+
         this.name = name;
         this.capacity = capacity;
     }
@@ -28,68 +41,43 @@ class Bogie {
 
 public class TrainConsistManagementApp {
 
-    // --- LOOP-BASED FILTERING ---
-    public static List<Bogie> filterUsingLoop(List<Bogie> bogies, int threshold) {
-        List<Bogie> filteredList = new ArrayList<>();
-        for (Bogie b : bogies) {
-            if (b.getCapacity() > threshold) {
-                filteredList.add(b);
-            }
-        }
-        return filteredList;
-    }
-
-    // --- STREAM-BASED FILTERING ---
-    public static List<Bogie> filterUsingStream(List<Bogie> bogies, int threshold) {
-        return bogies.stream()
-                .filter(b -> b.getCapacity() > threshold)
-                .collect(Collectors.toList());
-    }
-
-    // Helper method to generate a massive list for realistic benchmarking
-    public static List<Bogie> generateLargeBogieList(int size) {
-        List<Bogie> largeList = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            // Alternate capacities for variety
-            int capacity = (i % 2 == 0) ? 72 : 56;
-            largeList.add(new Bogie("Bogie-" + i, capacity));
-        }
-        return largeList;
-    }
-
     public static void main(String[] args) {
         System.out.println("--- Train Consist Management System ---");
-        System.out.println("Executing UC13: Loops vs Streams Benchmark\n");
+        System.out.println("Executing UC14: Custom Exception Validation\n");
 
-        // 1. Create a large collection of bogies for testing
-        int datasetSize = 1_000_000;
-        System.out.println("Generating dataset of " + datasetSize + " bogies...");
-        List<Bogie> massiveTrain = generateLargeBogieList(datasetSize);
-        int threshold = 60;
+        List<Bogie> trainConsist = new ArrayList<>();
 
-        // Warm-up the JVM (Java optimizes code on the fly. Running it once before measuring gives fairer results)
-        filterUsingLoop(massiveTrain, threshold);
-        filterUsingStream(massiveTrain, threshold);
+        System.out.println("Attempting to assemble train...");
 
-        System.out.println("\n--- Starting Benchmark (Threshold > " + threshold + ") ---");
+        // Scenario 1: Valid Bogie
+        try {
+            Bogie sleeper = new Bogie("Sleeper", 72);
+            trainConsist.add(sleeper);
+            System.out.println("✅ Added: " + sleeper);
+        } catch (InvalidCapacityException e) {
+            System.out.println("❌ Failed to add Sleeper: " + e.getMessage());
+        }
 
-        // --- 2. MEASURE LOOP PERFORMANCE ---
-        long loopStartTime = System.nanoTime();
-        List<Bogie> loopResults = filterUsingLoop(massiveTrain, threshold);
-        long loopEndTime = System.nanoTime();
-        long loopDuration = loopEndTime - loopStartTime;
+        // Scenario 2: Invalid Bogie (Zero Capacity)
+        try {
+            Bogie faultyZero = new Bogie("AC Chair", 0);
+            trainConsist.add(faultyZero);
+            System.out.println("✅ Added: " + faultyZero);
+        } catch (InvalidCapacityException e) {
+            System.out.println("❌ Failed to add AC Chair: " + e.getMessage());
+        }
 
-        System.out.println("Loop-based execution time   : " + loopDuration + " nanoseconds (" + (loopDuration / 1_000_000) + " ms)");
+        // Scenario 3: Invalid Bogie (Negative Capacity)
+        try {
+            Bogie faultyNegative = new Bogie("First Class", -10);
+            trainConsist.add(faultyNegative);
+            System.out.println("✅ Added: " + faultyNegative);
+        } catch (InvalidCapacityException e) {
+            System.out.println("❌ Failed to add First Class: " + e.getMessage());
+        }
 
-        // --- 3. MEASURE STREAM PERFORMANCE ---
-        long streamStartTime = System.nanoTime();
-        List<Bogie> streamResults = filterUsingStream(massiveTrain, threshold);
-        long streamEndTime = System.nanoTime();
-        long streamDuration = streamEndTime - streamStartTime;
-
-        System.out.println("Stream-based execution time : " + streamDuration + " nanoseconds (" + (streamDuration / 1_000_000) + " ms)");
-
-        // Verification
-        System.out.println("\nVerification: Both methods found " + loopResults.size() + " matching bogies.");
+        System.out.println("\n--- Final Train Consist ---");
+        System.out.println("Total Bogies: " + trainConsist.size());
+        trainConsist.forEach(System.out::println);
     }
 }
